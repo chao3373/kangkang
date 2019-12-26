@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>查看配方</title>
+    <link rel="stylesheet" type="text/css"
+          href="/static/jquery-easyui-1.3.3/themes/bootstrap/easyui.css"></link>
+    <link rel="stylesheet" type="text/css"
+          href="/static/jquery-easyui-1.3.3/themes/icon.css"></link>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.easyui.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="/static/js/date.js"></script>
+    <script type="text/javascript">
+
+        function formatUser(val, row) {
+            return val.trueName + "&nbsp;(" + val.userName + ")&nbsp;";
+        }
+
+
+        function formatSupplier(val, row) {
+            return val.name;
+        }
+
+        //格式化日期
+        Date.prototype.format = function (formatStr) {
+            var str = formatStr;
+            var Week = ['日', '一', '二', '三', '四', '五', '六'];
+            str = str.replace(/yyyy|YYYY/, this.getFullYear());
+            str = str.replace(/MM/,
+                (this.getMonth() + 1) > 9 ? (this.getMonth() + 1).toString()
+                    : '0' + (this.getMonth() + 1));
+            str = str.replace(/dd|DD/, this.getDate() > 9 ? this.getDate()
+                .toString() : '0' + this.getDate());
+            return str;
+        }
+
+        //显示时间数据时先进行格式化
+        function formatDate(val, row) {
+            var dateType = "";
+            var date = new Date();
+            date.setTime(val);
+            dateType = date.format("yyyy-MM-dd")
+            return dateType;
+        }
+
+        //字符串转日期
+        function strToDate(val) {
+            var dateType = "";
+            var date = new Date(val).getTime();
+            return date;
+        }
+
+        function strDate(val) {
+            var dateType = "";
+            var date = new Date(val).format("yyyy-MM-dd");
+            return date;
+        }
+
+
+        function formatUser(val, row) {
+            return val.trueName + "&nbsp;(" + val.userName + ")&nbsp;";
+        }
+
+        $(document).ready(function () {
+            loadDG();
+        });
+
+        //加载dg
+        function loadDG() {
+            $("#dg").datagrid({
+                columns: [[
+                {
+                    field: "saleNumber",
+                    title: "订单号",
+                    width: "100",
+                    align: "center",
+                    formatter:function (val, row) {
+                        if(row.saleList){
+                            return row.saleList.saleNumber;
+                        }else {
+                            return "";
+                        }
+                    }
+                }, {
+                    field: "informNumber",
+                    title: "通知单号",
+                    width: "100",
+                    align: "center"
+                }, {
+                    field: "peasant",
+                    title: "农户名称",
+                    width: "100",
+                    align: "center"
+                }, {
+                    field: "clientname",
+                    title: "客户名称",
+                    width: "100",
+                    align: "center"
+                }, {
+                    field: 'name',
+                    title: "产品名称",
+                    width: "200",
+                    align: "center"
+                }, {
+                    field: "model",
+                    title: "幅宽（m）",
+                    width: "100",
+                    align: "center"
+                }, {
+                    field: "price",
+                    title: "厚度（mm）",
+                    width: "100",
+                    align: "center"
+                }, {
+                    field: "length",
+                    title: "长度（m）",
+                    width: "100",
+                    align: "center"
+                }, {
+                    field: "color",
+                    title: "颜色",
+                    width: "50",
+                    align: "center"
+                }
+                ]],onClickRow:function (index,row) {
+                    if(row!=null){
+                        $("#addSon").datagrid({
+                            url: "/admin/peifang/findByinformNumber",
+                            queryParams: {
+                                infromNumber: row.informNumber
+                            },
+                            columns: [[
+                                {
+                                    field: 'ceng',
+                                    title: '层',
+                                    width: 100,
+                                    align: 'center'
+                                },{
+                                    field: 'muliao',
+                                    title: '母料',
+                                    width: 100,
+                                    align: 'center'
+                                },{
+                                    field: 'xianxing',
+                                    title: '线型',
+                                    width: 100,
+                                    align: 'center'
+                                },{
+                                    field: 'gaoya',
+                                    title: '高压',
+                                    width: 100,
+                                    align: 'center'
+                                },{
+                                    field: 'maojinshu',
+                                    title: '茂金属',
+                                    width: 100,
+                                    align: 'center'
+                                },{
+                                    field: 'semu',
+                                    title: '色母',
+                                    width: 100,
+                                    align: 'center'
+                                },{
+                                    field: 'qita',
+                                    title: '其他',
+                                    width: 100,
+                                    align: 'center'
+                                }
+                            ]]
+                        });
+                    }}
+            });
+        }
+
+        //搜索
+        function searchSale() {
+
+            console.log($("#clientname").combobox("getValue"))
+            $.post("/admin/saleListProduct/chaxunpeifang",{
+                client:$("#clientname").combobox("getValue")
+            },function (result) {
+                if(result.success){
+                    $("#dg").datagrid("loadData",result.rows);
+                    $("#addSon").datagrid("loadData",[]);
+                }
+            },"json")
+        }
+
+        function reload() {
+            window.location.reload();
+        }
+    </script>
+</head>    <!--上面的dg  下面的addSon-->
+<body class="easyui-layout" style="margin: 1px">
+<div region="north" style="height: 300px">
+    <table id="dg" class="easyui-datagrid"
+           fitColumns="false" rownumbers="true" singleSelect="true" fit="true"
+           toolbar="#tb1" split="true">
+    </table>
+
+    <!-- dg顶部工具栏 -->
+    <div id="tb1">
+        <fieldset style="border-color: #E7F0FF">
+            <legend>查询设置</legend>
+            &nbsp;客户姓名&nbsp; <input
+                class="easyui-combobox" id="clientname" name="clientname" style="width: 100px"
+                data-options="panelHeight:'auto',valueField:'name',textField:'name',url:'/admin/client/clientList'"/>
+            &nbsp;&nbsp;<a href="javascript:searchSale()"
+                           class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+            &nbsp;&nbsp;<a href="javascript:reload()"
+                                 class="easyui-linkbutton" iconCls="icon-reload" plain="true">刷新</a>
+        </fieldset>
+    </div>
+</div>
+
+<div region="center" style="margin-top: 5px">
+    <table id="addSon" class="easyui-datagrid" fitColumns="false" singleSelect="true"
+           rownumbers="true" fit="true" split="true" toolbar="#tb2">
+        <thead>
+            <tr>
+                <th field="ceng" width="100" editor="text" align="center">层</th>
+                <th field="muliao" width="100" editor="text" align="center">母料</th>
+                <th field="xianxing" width="100" align="center" editor="text">线型</th>
+                <th field="gaoya" width="100" align="center" editor="text">高压</th>
+                <th field="maojinshu" width="100" align="center" editor="text">茂金属</th>
+                <th field="semu" width="100" align="center" editor="text">色母</th>
+                <th field="qita" width="100" align="center" editor="text">其他</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+</body>
+</html>

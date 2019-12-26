@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>订单追踪</title>
+    <link rel="stylesheet" type="text/css" href="/static/jquery-easyui-1.3.3/themes/bootstrap/easyui.css"></link>
+    <link rel="stylesheet" type="text/css"
+          href="/static/jquery-easyui-1.3.3/themes/icon.css"></link>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.easyui.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="/static/js/date.js"></script>
+    <script type="text/javascript" src="/js/main.js"></script>
+    <script src="/static/datagrid-export/datagrid-export.js"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            $('#dg').datagrid({
+                rowStyler: function (index, row) {
+                    if ((row.state.substring(0, 4)) == "生产完成") {
+                        return 'background-color:green;color:white;font-weight:bold;';
+                    }
+                }
+            });
+
+            $("#dg").datagrid({
+                columns: [[
+                    {
+                        field: 'id',
+                        title: '编号',
+                        width: 100,
+                        align: 'center',
+                        hidden: 'true'
+                    }, {
+                        field: 'sale_number',
+                        title: '订单号',
+                        width: 130,
+                        align: 'center',
+                    }, {
+                        field: 'inform_number',
+                        title: '通知单号',
+                        width: 50,
+                        align: 'center'
+                    }, {
+                        field: 'clientname',
+                        title: '客户名称',
+                        width: 100,
+                        align: 'center'
+                    }, {
+                        field: 'peasant',
+                        title: '农户',
+                        width: 100,
+                        align: 'center'
+                    }, {
+                        field: 'name',
+                        title: '产品名称',
+                        width: 100,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (a > b ? 1 : -1);
+                        }
+                    }, {
+                        field: 'code',
+                        title: '序号',
+                        width: 100,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (a > b ? 1 : -1);
+                        }
+                    }, {
+                        field: 'jitainame',
+                        title: '机台',
+                        width: 100,
+                        align: 'center',
+                    }, {
+                        field: 'length',
+                        title: '长度',
+                        width: 55,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (a > b ? 1 : -1);
+                        }
+                    }, {
+                        field: 'model',
+                        title: '宽度',
+                        width: 55,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (a > b ? 1 : -1);
+                        }
+                    }, {
+                        field: 'price',
+                        title: '厚度',
+                        width: 55,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (a > b ? 1 : -1);
+                        }
+                    }, {
+                        field: 'wanchengshu',
+                        title: '完成数量',
+                        width: 55,
+                        align: 'center',
+                    }, {
+                        field: 'num',
+                        title: '总数量',
+                        width: 55,
+                        align: 'center'
+                    }, {
+                        field: 'shengyushu',
+                        title: '剩余件数',
+                        width: 55,
+                        align: 'center',
+                    }, {
+                        field: 'oneweight',
+                        title: '重量',
+                        width: 55,
+                        align: 'center'
+                    }, {
+                        field: 'sumwight',
+                        title: '总重量',
+                        width: 55,
+                        align: 'center'
+                    }, {
+                        field: 'wanchengzhongliang',
+                        title: '已生产重量',
+                        width: 55,
+                        align: 'center',
+                    }, {
+                        field: 'shengyuzhongliang',
+                        title: '未生产重量',
+                        width: 55,
+                        align: 'center',
+                    }, {
+                        field: 'state',
+                        title: '订单状态',
+                        width: 100,
+                        align: 'center'
+                    }, {
+                        field: 'sale_date',
+                        title: '销售日期',
+                        width: 100,
+                        align: 'center',
+                    }
+                ]],
+                remoteSort: false
+            });
+        });
+
+
+        //导出
+        function daochu(dg) {
+            var fields = $("#dg").datagrid('getColumnFields');
+            var datagridTitle = new Array();
+            for (var i = 0; i < fields.length; i++) {
+                var option = $("#dg").datagrid('getColumnOption', fields[i]);
+                if (option.field != "checkItem" && option.hidden != "true") { //过滤勾选框和隐藏列
+                    var obj = {};
+                    obj.title = option.title;
+                    obj.field = option.field;
+                    if (option.formatter) {
+                        obj.formatter = option.formatter;
+                    }
+                    datagridTitle.push(obj);
+                }
+            }
+            console.log(datagridTitle);
+
+            var jsonarr = [];
+            var rows = $(dg).datagrid("getRows");
+            for (var i = 0; i < rows.length; i++) {
+                var json = {};
+                console.log(rows[i]);
+                for (var j = 0; j < datagridTitle.length; j++) {
+                    var st = datagridTitle[j].title;
+                    if (datagridTitle[j].formatter) {
+                        json[datagridTitle[j].title] = datagridTitle[j].formatter(rows[datagridTitle[j].field], rows[i]);
+                    } else {
+                        json[datagridTitle[j].title] = rows[i][datagridTitle[j].field];
+                    }
+                }
+                console.log(JSON.stringify(json));
+                jsonarr.push(JSON.stringify(json));
+            }
+
+            jsonarr = "[" + jsonarr.join(",") + "]";
+            console.log(jsonarr);
+
+            $.ajax({
+                type: "POST",
+                url: "/admin/daochu?title=订单追踪",
+                data: {a: jsonarr},
+                success: function (result) {
+                    if (result.success) {
+                        $.messager.alert("系统提示", "导出成功");
+                    }
+                    return;
+                }
+            });
+
+        }
+
+        //搜索
+        function screenSale() {
+            var data = getFrom('#fm');
+            data.queryName = data.saleNumber;
+            console.log(data);
+            $.ajax({
+                type: "POST",
+                url: "/admin/saleListProduct/dingDanZhuiZong",
+                data: data,
+                success: function (result) {
+                    if (result.success) {
+                        console.log(result.rows)
+                        $("#dg").datagrid("loadData", result.rows);
+                    }
+                }
+            });
+        }
+
+        function clertCondition() {
+            window.location.reload();
+        }
+
+        //合计
+        function heji() {
+            var rows = $("#dg").datagrid("getRows");
+            var wanchengshu = 0;
+            var weiwanchengshu = 0;
+            var zongshu = 0;
+            var zongzhongliang = 0;
+            var wanchengzhongliang = 0;
+            var weiwanchengzhongliang = 0;
+            for (var i = 0; i < rows.length; i++) {
+                wanchengshu = wanchengshu + rows[i].accomplishNumber;
+                zongshu = zongshu + rows[i].num;
+                weiwanchengshu = zongshu - wanchengshu;
+
+                zongzhongliang = zongzhongliang + rows[i].sumWeight;
+                wanchengzhongliang = wanchengzhongliang + rows[i].accomplishNumber * rows[i].oneweight;
+                weiwanchengzhongliang = zongzhongliang - wanchengzhongliang;
+            }
+        }
+
+
+    </script>
+</head>
+<body style="margin: 1px" class="easyui-layout">
+<div data-options="region:'center'" style="padding: 10px; border: 1px;">
+    <table id="dg" class="easyui-datagrid"
+           rownumbers="true" singleSelect="true"
+           toolbar="#tb" fit="true" split="true">
+    </table>
+
+
+    <div id="tb" style="padding: 15px;">
+        <form id="fm">
+            <table>
+                <tr>
+                    <td>
+                        订单号：<input id="saleNumber" name="saleNumber" style="width: 130px"/>
+                    </td>
+                    <td>
+                        客户：<input class="easyui-combobox"
+                                  id="s_client" name="clientname" style="width: 100px"
+                                  data-options="panelHeight:'auto',valueField:'name',textField:'name',url:'/admin/client/clientList'"/>
+                    </td>
+                    <td>
+                        农&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;户：<input id="peasant" name="peasant" style="width: 130px"/>
+                    </td>
+                    <td>
+                        重量：<input id="oneweight" name="oneweight" style="width: 130px"/>
+                    </td>
+                    <td>
+                        宽度：<input id="model" name="model" style="width: 130px"/>
+                    </td>
+                    <td>
+                        选择机台：<input class="easyui-combobox" id="jitai" name="jiTai"
+                                    style="width: 100px"
+                                    data-options="panelHeight:'auto',valueField:'id',textField:'name',url:'/admin/jitai/jitaiList'"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        长&nbsp;&nbsp;&nbsp;度：<input id="length" name="length" style="width: 130px"/>
+                    </td>
+                    <td>
+                        厚度：<input id="price" name="price" style="width: 95px"/>
+                    </td>
+                    <td>
+                        通知单号：<input id="informNumber" name="informNumber" style="width: 130px"/>
+                    </td>
+                    <td>产品名称：<input class="easyui-combobox" id="name" name="name"
+                            style="width: 100px" data-options="valueField:'name',textField:'name',url:'/admin/product/productList'"/>
+                    </td>
+                    <td>
+                        <a href="javascript:screenSale()"
+                           class="easyui-linkbutton" iconCls="icon-search">查询</a>
+                        <!-- </td>
+                         <td>-->
+                        <a href="javascript:clertCondition()" class="easyui-linkbutton"
+                           iconCls="icon-reload">刷新</a>
+                    </td>
+                    <!--<td>-->
+                    <!--<a class="easyui-linkbutton" iconCls="icon-reload"-->
+                    <!--href="javascript:daochu('#dg')">导出</a>-->
+                    <!--</td>-->
+                    <td>
+                        <a class="easyui-linkbutton" iconCls="icon-reload"
+                           href="javascript:$('#dg').datagrid('toExcel', '订单追踪.xls');">导出</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+</body>
+</html>

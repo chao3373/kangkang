@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>产品出库明细表</title>
+    <link rel="stylesheet" type="text/css" href="/static/jquery-easyui-1.3.3/themes/bootstrap/easyui.css"></link>
+    <link rel="stylesheet" type="text/css"
+          href="/static/jquery-easyui-1.3.3/themes/icon.css"></link>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.easyui.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="/static/js/date.js"></script>
+    <script type="text/javascript" src="/static/datagrid-export/datagrid-export.js"></script>
+    <script type="text/javascript">
+        //点击确定按钮
+        function loaddg() {
+            $("#count").text("总数量：");
+            $("#sumweight").text("总重量：");
+            addSelect();
+            $.post("/admin/storage/detail", json, function (result) {
+
+                console.log(result);
+                if (result.success) {
+                    $("#dg").datagrid("loadData", result.rows);
+                    $("#count").text($("#count").text() + result.count);
+                    $("#sumweight").text($("#sumweight").text() + result.sumweight);
+                    $("#count").show();
+                    $("#sumweight").show();
+                }
+            });
+        }
+
+        //显示合计
+        function addSum() {
+            var rows = $("#dg").datagrid('getRows');
+            if (rows.length < 1) {
+                alert('没有数据！');
+                return;
+            }
+            if (rows[rows.length - 1].clientname == '合计') {
+                $("#dg").datagrid('deleteRow', rows.length - 1);
+            }
+            var num = 0;
+            var sumWeight = 0;
+            var name = rows[0].name;
+            var sumprice = 0;
+            if (tongji && tongji == "平方") {
+                for (var i = 0; i < rows.length; i++) {
+                    sumprice += rows[i].totalprice;
+                    num += rows[i].num;
+                    if (i != 0 && rows[i].name == name) {
+                        var row = rows[i];
+                        row.name = "…";
+                        $("#dg").datagrid("deleteRow", i);
+                        $("#dg").datagrid("insertRow", {
+                            index: i,
+                            row: row
+                        });
+                    } else {
+                        name = rows[i].name;
+                    }
+                    sumWeight += (rows[i].length * rows[i].model * rows[i].num);
+                }
+                $("#dg").data("loadData", []);
+
+                $("#dg").datagrid('appendRow', {
+                    code: "",
+                    outnumber: "",
+                    name:"",
+                    model:"",
+                    length:"",
+                    price:"",
+                    num:"",
+                    realityweight:"",
+                    numweight:"",
+                    danjianpingfang:"",
+                    zongpingfang:"",
+                    unitprice:"",
+                    color:"",
+                    clientname: '合计',
+                    peasant: '总数量：' + num + '件',
+                    salenumber: '总平方：' + sumWeight.toFixed(2),
+                    totalprice: "总金额：" + sumprice.toFixed(2)
+                });
+            } else {
+                for (var i = 0; i < rows.length; i++) {
+                    sumprice += rows[i].totalprice;
+                    num += rows[i].num;
+                    if (i != 0 && rows[i].name == name) {
+                        var row = rows[i];
+                        row.name = "…";
+                        $("#dg").datagrid("deleteRow", i);
+                        $("#dg").datagrid("insertRow", {
+                            index: i,
+                            row: row
+                        });
+                    } else {
+                        name = rows[i].name;
+                    }
+                    sumWeight += rows[i].numweight;
+                }
+                $("#dg").data("loadData", []);
+
+                $("#dg").datagrid('appendRow', {
+                    code: "",
+                    outnumber: "",
+                    name:"",
+                    model:"",
+                    length:"",
+                    price:"",
+                    num:"",
+                    realityweight:"",
+                    numweight:"",
+                    danjianpingfang:"",
+                    zongpingfang:"",
+                    unitprice:"",
+                    color:"",
+                    clientname: '合计',
+                    peasant: '总数量：' + num + '件',
+                    salenumber: '总重量：' + sumWeight.toFixed(2) + 'kg',
+                    totalprice: "总金额：" + sumprice.toFixed(2)
+                });
+            }
+        }
+
+        //添加选择条件
+        var json = {};
+
+        function addSelect() {
+            json = {};
+            if ($("#saleDate").datebox("getValue")) {
+                json.date = $("#saleDate").datebox("getValue");
+            }
+            if ($("#client").combobox("getText")) {
+                json.client = $("#client").combobox("getText");
+            }
+            if ($("#peasant").val()) {
+                json.peasant = $("#peasant").val();
+            }
+            if ($("#product").combobox("getText")) {
+                json.product = $("#product").combobox("getText");
+            }
+            if ($("#chukudanhao").val()) {
+                json.chukudanhao = $("#chukudanhao").val()
+            }
+        }
+
+        //刷新
+        function resett() {
+            $("#client").combobox("reset");
+            $("#saleDate").datebox("reset");
+            $("#peasant").val("");
+            $("#product").combobox("reset");
+            $("#dg").datagrid("reload");
+        }
+
+        //设置排序
+        function orderBy(order) {
+            addSelect();
+            json.order = "";
+            json.order = order;
+
+            $.ajax({
+                type: "POST",
+                async: false,
+                url: "/admin/storage/detail",
+                data: json,
+                success: function (result) {
+                    if (result.success) {
+                        console.log(result.rows);
+                        $("#dg").datagrid("loadData", result.rows);
+                    }
+                }
+            });
+
+            var rows = $("#dg").datagrid("getRows");
+            console.log(rows.length);
+            var rsArr = [];
+            var rw = {};
+            var od = rows[0][order];
+            console.log(od);
+            var sum = 0;
+            var count = 0;
+            var i;
+            for (i = 0; i < rows.length; i++) {
+                if (od == rows[i][order]) {
+                    count += Number(rows[i]["sum"]);
+                    sum += Number(rows[i]["realityweight"]);
+                } else {
+                    rw.index = i;
+                    rw.count = count;
+                    rw.sum = sum;
+                    rsArr.push(rw);
+                    rw = {};
+                    od = rows[i][order];
+                    sum = rows[i]["realityweight"];
+                    count = 1;
+                }
+            }
+            rw.index = i;
+            rw.count = count;
+            rw.sum = sum;
+            rsArr.push(rw);
+
+            for (var i = rsArr.length - 1; i >= 0; i--) {
+                console.log(rsArr[i]);
+                $("#dg").datagrid("insertRow", {
+                    index: rsArr[i]["index"],
+                    row: {
+                        clientname: "小计",
+                        peasant: "",
+                        saleNumber: "",
+                        name: "",
+                        model: "",
+                        length: "",
+                        price: "",
+                        realityweight: "总重量：" + rsArr[i]["sum"],
+                        sum: "总数量：" + rsArr[i]["count"]
+                    }
+                });
+            }
+        }
+
+        $(document).ready(function () {
+            //加载dg的列
+            $("#dg").datagrid({
+                columns: [[
+                    {
+                        field: 'code',
+                        title: '序号',
+                        width: 50,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (Number(a) > Number(b) ? 1 : -1);
+                        }
+                    },
+                    {field: 'id', title: '商品编号', width: 60, align: 'center'},
+                    {field: 'clientname', title: '购货单位', width: 100, align: 'center'},
+                    {field: 'peasant', title: '农户名称', width: 100, align: 'center'},
+                    {field: 'outnumber', title: '出库单号', width: 150, align: 'center'},
+                    {field: 'salenumber', title: '订单号', width: 150, align: 'center'},
+                    {field: 'name', title: '产品名称', width: 200, align: 'center'},
+                    {
+                        field: 'model',
+                        title: '幅宽m',
+                        width: 100,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (a > b ? 1 : -1);
+                        }
+                    },
+                    {
+                        field: 'length',
+                        title: '长度m',
+                        width: 100,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (a > b ? 1 : -1);
+                        }
+                    },
+                    {
+                        field: 'price',
+                        title: '厚度mm',
+                        width: 100,
+                        align: 'center',
+                        sortable: true,
+                        sorter: function (a, b) {
+                            return (a > b ? 1 : -1);
+                        }
+                    },
+                    {field: 'num', title: '数量', width: 100, align: 'center'},
+                    {field: 'realityweight', title: '重量kg', width: 100, align: 'center'},
+                    {field: 'numweight', title: '总重量kg', width: 100, align: 'center'},
+                    // {field: 'danjianpingfang', title: '平方米', width: 100, align: 'center'},
+                    // {field: 'zongpingfang', title: '总平方米', width: 100, align: 'center'},
+                    {field: 'unitprice', title: '单价', width: 100, align: 'center'},
+                    {field: 'totalprice', title: '金额', width: 100, align: 'center'},
+                    {field: 'color', title: '颜色', width: 100, align: 'center'}
+                ]],
+                remoteSort: false
+            });
+        });
+
+        //打印
+        function printdg() {
+            CreateFormPage("datagrid", $("#dg"));
+        }
+
+        //时间格式转换
+        function formet(datee) {
+            var date = new Date(datee);
+            console.log(date);
+            Y = date.getFullYear() + '-';
+            M = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+            D = date.getDate() + ' ';
+            h = date.getHours() + ':';
+            m = date.getMinutes() + ':';
+            s = date.getSeconds();
+            return Y + M + D + h + m + s;
+        }
+
+
+        var tableString;
+        // strPrintName 打印任务名
+        // printDatagrid 要打印的datagrid
+        function CreateFormPage(strPrintName, printDatagrid) {
+            tableString = "";
+            tableString += "<div style='text-align: center;'><h1>产品出库明细表</h1>";
+            tableString += "<p><span style='color: black; margin-left: -47px;'>购货单位:" + $("#client").combobox("getText") + "</span>";
+            tableString += "<span style='color: black; margin-left: 300px;'>出库时间：" + $("#saleDate").datebox("getValue") + "</span></p>";
+            tableString += '<table cellspacing="0" class="pb">';
+            var frozenColumns = printDatagrid.datagrid("options").frozenColumns; // 得到frozenColumns对象
+            var columns = printDatagrid.datagrid("options").columns; // 得到columns对象
+            var nameList = '';
+
+            // 载入title
+            if (typeof columns != 'undefined' && columns != '') {
+                $(columns)
+                    .each(
+                        function (index) {
+                            tableString += '\n<tr>';
+                            if (typeof frozenColumns != 'undefined'
+                                && typeof frozenColumns[index] != 'undefined') {
+                                for (var i = 0; i < frozenColumns[index].length; ++i) {
+                                    if (!frozenColumns[index][i].hidden) {
+                                        tableString += '\n<th width="'
+                                            + frozenColumns[index][i].width
+                                            + '"';
+                                        if (typeof frozenColumns[index][i].rowspan != 'undefined'
+                                            && frozenColumns[index][i].rowspan > 1) {
+                                            tableString += ' rowspan="'
+                                                + frozenColumns[index][i].rowspan
+                                                + '"';
+                                        }
+                                        if (typeof frozenColumns[index][i].colspan != 'undefined'
+                                            && frozenColumns[index][i].colspan > 1) {
+                                            tableString += ' colspan="'
+                                                + frozenColumns[index][i].colspan
+                                                + '"';
+                                        }
+                                        if (typeof frozenColumns[index][i].field != 'undefined'
+                                            && frozenColumns[index][i].field != '') {
+                                            nameList += ',{"f":"'
+                                                + frozenColumns[index][i].field
+                                                + '", "a":"'
+                                                + frozenColumns[index][i].align
+                                                + '"}';
+                                        }
+                                        tableString += '>'
+                                            + frozenColumns[0][i].title
+                                            + '</th>';
+                                    }
+                                }
+                            }
+                            for (var i = 0; i < columns[index].length; ++i) {
+                                if (!columns[index][i].hidden) {
+                                    tableString += '\n<th width="'
+                                        + columns[index][i].width + '"';
+                                    if (typeof columns[index][i].rowspan != 'undefined'
+                                        && columns[index][i].rowspan > 1) {
+                                        tableString += ' rowspan="'
+                                            + columns[index][i].rowspan
+                                            + '"';
+                                    }
+                                    if (typeof columns[index][i].colspan != 'undefined'
+                                        && columns[index][i].colspan > 1) {
+                                        tableString += ' colspan="'
+                                            + columns[index][i].colspan
+                                            + '"';
+                                    }
+                                    if (typeof columns[index][i].field != 'undefined'
+                                        && columns[index][i].field != '') {
+                                        nameList += ',{"f":"'
+                                            + columns[index][i].field
+                                            + '", "a":"'
+                                            + columns[index][i].align
+                                            + '"}';
+                                    }
+                                    tableString += '>'
+                                        + columns[index][i].title
+                                        + '</th>';
+                                }
+                            }
+                            tableString += '\n</tr>';
+                        });
+            }
+            // 载入内容
+            var rows = printDatagrid.datagrid("getRows"); // 这段代码是获取当前页的所有行
+            console.log(rows);
+            console.log(nameList);
+            var nl = eval('([' + nameList.substring(1) + '])');
+            console.log(nl);
+            for (var i = 0; i < rows.length; ++i) {
+                tableString += '\n<tr>';
+                $(nl).each(function (j) {
+                    var e = nl[j].f.lastIndexOf('_0');
+
+                    tableString += '\n<td';
+                    if (nl[j].a != 'undefined' && nl[j].a != '') {
+                        tableString += ' style="text-align:' + nl[j].a + ';"';
+                    }
+                    tableString += '>';
+                    if (e + 2 == nl[j].f.length) {
+                        tableString += rows[i][nl[j].f.substring(0, e)];
+                    } else {
+                        var tdStr = rows[i][nl[j].f];
+                        if (tdStr == null) {
+                            tdStr = "";
+                        } else if ([nl[j].f] == 'dateInProduced') {
+                            tdStr = formet(rows[i][nl[j].f]);
+                        }
+                        console.log(tdStr);
+                        tableString += tdStr;
+                    }
+                    tableString += '</td>';
+                });
+                tableString += '\n</tr>';
+            }
+            tableString += '\n</table> </div>';
+
+
+            if (window.showModalDialog) {
+                window
+                    .showModalDialog(
+                        "/sale/print.html",
+                        tableString,
+                        "location:No;status:No;help:No;dialogWidth:800px;dialogHeight:600px;scroll:auto;");
+            } else {
+                window
+                    .open(
+                        "/sale/print.html",
+                        tableString,
+                        "location:No;status:No;help:No;dialogWidth:800px;dialogHeight:600px;scroll:auto;");
+                console.log(tableString);
+            }
+        }
+
+        //点击选择出库单
+        function selectOutNumber() {
+            $("#outNumber").combobox("disable");
+            $("#dlg2").dialog("open");
+            $("#outDate").datebox({
+                onSelect: function (date) {
+                    $("#outNumber").combobox({
+                        url: "/admin/storage/selectClientNameByOutDate?outDate=" + $("#outDate").datebox("getValue"),
+                        valueField: 'outNumber',
+                        textField: 'outNumber',
+                        panelHeight: 'auto'
+                    });
+                    $("#outNumber").combobox("enable");
+                }
+            });
+        }
+
+        //添加出库单
+        function addOutNumber() {
+            $("#dg").datagrid({
+                url: "/admin/storage/selectOutByOutNumber?outNumber=" + $("#outNumber").combobox("getValue")
+            });
+            $("#dh").text($("#outNumber").combobox("getValue"));
+            closeDlg2();
+        }
+
+        function closeDlg2() {
+            $("#dlg2").dialog("close");
+        }
+
+        //导出
+        function daochu() {
+            $('#dg').datagrid('toExcel', '产品出库明细表.xls');	// export to excel
+        }
+
+        //产品名称小计
+        function orderByname() {
+            var rows = $("#dg").datagrid("getRows");
+            if (rows[rows.length - 1].clientname == "总计：") {
+                alert("已经添加合计！");
+                return;
+            }
+            var name = rows[0].name;
+            var zcount = 0;
+            var zsumw = 0;
+            var count = 0;
+            var sumw = 0;
+            if (tongji == "平方") {
+                for (var i = 0; i < rows.length; i++) {
+                    if (rows[i].name != name) {
+                        $('#dg').datagrid('insertRow', {
+                            index: i,	// index start with 0
+                            row: {
+                                clientname: "小计：",
+                                peasant: "总数量：" + count + "件",
+                                name: "总重量：" + sumw.toFixed(2) + "KG"
+                            }
+                        });
+                        count = 0;
+                        sumw = 0;
+                        name = rows[i + 1].name;
+                        i++;
+                    } else {
+                        if (i != 0) {
+                            $('#dg').datagrid('updateRow', {
+                                index: i,
+                                row: {
+                                    name: '...',
+                                }
+                            });
+                        }
+                    }
+                    if (i == rows.length - 1) {
+                        sumw += rows[i].zongpingfang;
+                        count += rows[i].sum;
+                        zsumw += rows[i].zongpingfang;
+                        zcount += rows[i].sum;
+                        $('#dg').datagrid('insertRow', {
+                            index: i + 1,	// index start with 0
+                            row: {
+                                clientname: "小计：",
+                                peasant: "总数量：" + count + "件",
+                                name: "总平方：" + sumw.toFixed(2)
+                            }
+                        });
+                        $('#dg').datagrid('insertRow', {
+                            index: i + 2,	// index start with 0
+                            row: {
+                                clientname: "总计：",
+                                peasant: "总数量：" + zcount + "件",
+                                name: "总平方：" + zsumw.toFixed(2) + "KG"
+                            }
+                        });
+                        return;
+                    }
+                    sumw += rows[i].zongzhong;
+                    count += rows[i].sum;
+                    zsumw += rows[i].zongzhong;
+                    zcount += rows[i].sum;
+                }
+            } else {
+                for (var i = 0; i < rows.length; i++) {
+                    // console.log("长度：" + rows.length);
+                    // console.log(name);
+                    // console.log(rows[i].name);
+                    if (rows[i].name != name) {
+                        $('#dg').datagrid('insertRow', {
+                            index: i,	// index start with 0
+                            row: {
+                                clientname: "小计：",
+                                peasant: "总数量：" + count + "件",
+                                name: "总重量：" + sumw.toFixed(2) + "KG"
+                            }
+                        });
+                        count = 0;
+                        sumw = 0;
+                        name = rows[i + 1].name;
+                        i++;
+                    } else {
+                        if (i != 0) {
+                            $('#dg').datagrid('updateRow', {
+                                index: i,
+                                row: {
+                                    name: '...',
+                                }
+                            });
+                        }
+                    }
+                    if (i == rows.length - 1) {
+                        sumw += rows[i].zongzhong;
+                        count += rows[i].sum;
+                        zsumw += rows[i].zongzhong;
+                        zcount += rows[i].sum;
+                        $('#dg').datagrid('insertRow', {
+                            index: i + 1,	// index start with 0
+                            row: {
+                                clientname: "小计：",
+                                peasant: "总数量：" + count + "件",
+                                name: "总重量：" + sumw.toFixed(2) + "KG"
+                            }
+                        });
+                        $('#dg').datagrid('insertRow', {
+                            index: i + 2,	// index start with 0
+                            row: {
+                                clientname: "总计：",
+                                peasant: "总数量：" + zcount + "件",
+                                name: "总重量：" + zsumw.toFixed(2) + "KG"
+                            }
+                        });
+                        return;
+                    }
+                    sumw += rows[i].zongzhong;
+                    count += rows[i].sum;
+                    zsumw += rows[i].zongzhong;
+                    zcount += rows[i].sum;
+                }
+            }
+        }
+
+        function geshihua(num) {
+            var ret = parseFloat(num);
+            console.log(ret);
+            return ret;
+        }
+
+
+    </script>
+</head>
+<body class="easyui-layout">
+<div data-options="region:'north'"
+     style="padding: 20px 10px 0 10px; border: 0px;">
+    <fieldset style="border-color: #E7F0FF">
+        <legend>
+            查询条件
+        </legend>
+        <form id="fm" method="post">
+            <table cellspacing="8px">
+                <tr>
+                    <td>&nbsp;&nbsp;购货单位：<input class="easyui-combobox" id="client" style="width: 100px" required="true"
+                                                demandd="true"
+                                                data-options="demandd:true,panelHeight:'auto',valueField:'id',textField:'name',url:'/admin/client/clientList'"/>
+                    </td>
+                    <td>出库时间：<input type="text" id="saleDate" name="saleDate"
+                                    class="easyui-datebox"
+                                    demandd="true" data-options="editable:false" size="10"/>
+                    </td>
+                    <td>农户名称： <input id="peasant"
+                                     name="peasant" style="width: 100px"/></td>
+                    <td>产品名称： <input id="product"
+                                     name="product" style="width: 100px" class="easyui-combobox"
+                                     url="/admin/product/productList"
+                                     data-options="demandd:true,panelHeight:'auto',valueField:'id',textField:'name'">
+                    </td>
+                    <td>出库单号： <input id="chukudanhao"
+                                     name="peasant" style="width: 100px"/></td>
+                    <td>
+                        <a class="easyui-linkbutton" iconCls="icon-search" href="javascript:loaddg()">查询</a>
+                    </td>
+                    <td>
+                        <a class="easyui-linkbutton" iconCls="icon-reload" href="javascript:resett()">刷新</a>
+                    </td>
+                    <td>
+                        <a class="easyui-linkbutton" iconCls="icon-reload" href="javascript:daochu('#dg')">导出</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <span id="count" style="font-size: 20px;color: red;display: none">总件数：</span>
+                    </td>
+                    <td>
+                        <span id="sumweight" style="font-size: 20px;color: red;display: none">总重量：</span>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </fieldset>
+</div>
+<div data-options="region:'center'" style="padding: 10px; border: 1px">
+    <table id="dg" class="easyui-datagrid" style="" rownumbers="true"
+           singleSelect="true" fit="true" toolbar="#tb" split="true">
+    </table>
+
+    <div id="tb">
+        <div style="padding: 2px">
+            <a href="javascript:printdg()" ;
+               class="easyui-linkbutton"
+               iconCls="icon-print" plain="true">打印</a>
+            <!--<a href="javascript:orderBy('peasant')" ;-->
+            <!--class="easyui-linkbutton" plain="true">农户</a>-->
+            <!--<a href="javascript:orderBy('model')" ;-->
+            <!--class="easyui-linkbutton" plain="true">幅宽</a>-->
+            <!--<a href="javascript:orderBy('name')" ;-->
+            <!--class="easyui-linkbutton" plain="true">产品名称</a>-->
+            <!--<a href="javascript:orderByname()" ;-->
+            <!--class="easyui-linkbutton" plain="true">产品名称小计</a>-->
+            <a href="javascript:addSum()" ;
+               class="easyui-linkbutton" plain="true">添加合计</a>
+            <!--<a href="javascript:addSumPingfang()" ;-->
+               <!--class="easyui-linkbutton" plain="true">按平方添加合计</a>-->
+            <a href="javascript:zhongliang()" ;
+               class="easyui-linkbutton">按重量计算</a>
+            <a href="javascript:pingfang()" ;
+               class="easyui-linkbutton">按平方计算</a>
+            <a href="javascript:{$('#dg').datagrid('hideColumn','unitprice');$('#dg').datagrid('hideColumn','totalprice');}"
+               ;
+               class="easyui-linkbutton">隐藏价格</a>
+            <a href="javascript:{$('#dg').datagrid('showColumn','unitprice');$('#dg').datagrid('showColumn','totalprice');}"
+               ;
+               class="easyui-linkbutton">显示价格</a>
+            <!--<a href="javascript:selectOutNumber()" class="easyui-linkbutton"-->
+            <!--iconCls="icon-add" plain="true">选择出库单</a>-->
+            <!--<a href="javascript:orderBy('length')" ;
+               class="easyui-linkbutton" plain="true">长度</a>
+            <a href="javascript:orderBy('price')" ;
+               class="easyui-linkbutton" plain="true">厚度</a>
+            <a href="javascript:orderBy('realityweight')" ;
+               class="easyui-linkbutton" plain="true">重量</a>-->
+        </div>
+    </div>
+</div>
+
+<div id="dlg2" class="easyui-dialog" title="选择出库单" style="width: 666px;height: 180px; padding: 20px;"
+     closed="true" buttons="#dlg2-tb">
+    <table>
+        <tr>
+            <td>选择出库日期：<input id="outDate" class="easyui-datebox" size="15"/></td>
+        </tr>
+        <tr>
+            <td>选择出库单号：<input id="outNumber" class="easyui-combobox" size="15"/></td>
+        </tr>
+    </table>
+</div>
+<div id="dlg2-tb">
+    <a href="javascript:addOutNumber()" class="easyui-linkbutton" iconCls="icon-ok">确定</a>
+    <a href="javascript:closeDlg2()" class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+
+</div>
+<script>
+    var tongji = "重量";
+
+    //重量
+    function zhongliang() {
+        tongji = "重量";
+        $("#dg").datagrid("showColumn", "danjianzhong");
+        $("#dg").datagrid("showColumn", "zongzhong");
+        $("#dg").datagrid("hideColumn", "danjianpingfang");
+        $("#dg").datagrid("hideColumn", "zongpingfang");
+    }
+
+    //平方
+    function pingfang() {
+        tongji = "平方";
+        $("#dg").datagrid("showColumn", "danjianpingfang");
+        $("#dg").datagrid("showColumn", "zongpingfang");
+        $("#dg").datagrid("hideColumn", "danjianzhong");
+        $("#dg").datagrid("hideColumn", "zongzhong");
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>结算单查询</title>
+    <link rel="stylesheet" type="text/css"
+          href="/static/jquery-easyui-1.3.3/themes/bootstrap/easyui.css"></link>
+    <link rel="stylesheet" type="text/css"
+          href="/static/jquery-easyui-1.3.3/themes/icon.css"></link>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.easyui.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="/static/js/date.js"></script>
+    <script type="text/javascript" src="/js/main.js"></script>
+    <script>
+        $(function () {
+            $("#dg").datagrid({
+                columns: [[
+                    {
+                        field: "id",
+                        width: "100",
+                        align: "center",
+                        hidden: true,
+                        title: "编号"
+                    },
+                    {
+                        field: "clientName",
+                        width: "100",
+                        align: "center",
+                        title: "购货单位"
+                    },
+                    {
+                        field: "chehao",
+                        width: "100",
+                        align: "center",
+                        title: "车牌号"
+                    },
+                    {
+                        field: "songhuoren",
+                        width: "100",
+                        align: "center",
+                        title: "送货人"
+                    },
+                    {
+                        field: "lankman",
+                        width: "100",
+                        align: "center",
+                        title: "联系方式"
+                    },
+                    {
+                        field: "fuzeren",
+                        width: "200",
+                        align: "center",
+                        title: "负责人"
+                    },
+                    {
+                        field: "tianzhiren",
+                        width: "100",
+                        align: "center",
+                        title: "填写人"
+                    },
+                    {
+                        field: "baoguanyuan",
+                        width: "100",
+                        align: "center",
+                        title: "保管"
+                    },
+                    {
+                        field: "xiaoshouyuan",
+                        width: "100",
+                        align: "center",
+                        title: "销售员"
+                    },
+                    {
+                        field: "yukuan",
+                        width: "100",
+                        align: "center",
+                        title: "前项余款"
+                    },
+                    {
+                        field: "qiankuan",
+                        width: "100",
+                        align: "center",
+                        title: "前项欠款"
+                    },
+                    {
+                        field: "xianjin",
+                        width: "100",
+                        align: "center",
+                        title: "本次现金"
+                    },
+                    {
+                        field: "piaoju",
+                        width: "100",
+                        align: "center",
+                        title: "本次票据"
+                    },
+                    {
+                        field: "jyukuan",
+                        width: "100",
+                        align: "center",
+                        title: "本次结算后余款"
+                    },
+                    {
+                        field: "jqiankuan",
+                        width: "100",
+                        align: "center",
+                        title: "本次结算后欠款"
+                    }
+
+                ]],
+                onSelect: function (index, row) {
+                    $("#dg2").datagrid({
+                        url: '/admin/jiesuandandetail/selectByJieSuanDanId',
+                        queryParams: {
+                            id: row.id
+                        },
+                        columns: [[
+                            {
+                                field: 'id',
+                                title: "编号",
+                                width: "200",
+                                hidden: true,
+                                align: "center"
+                            },
+                            {
+                                field: 'name',
+                                title: "产品名称",
+                                width: "200",
+                                align: "center"
+                            },
+                            {
+                                field: "count",
+                                title: "发货数",
+                                width: "100",
+                                align: "center"
+                            },
+                            {
+                                field: "guige",
+                                title: "规格",
+                                width: "100",
+                                align: "center"
+                            },
+                            {
+                                field: "danwei",
+                                title: "单位",
+                                width: "50",
+                                align: "center"
+                            },
+                            {
+                                field: "money",
+                                title: "单价",
+                                width: "50",
+                                align: "center"
+                            },
+                            {
+                                field: "summoney",
+                                title: "总价格",
+                                width: "50",
+                                align: "center"
+                            },
+                        ]]
+                    });
+                }
+            });
+        });
+
+        function searchSale() {
+            var obj = {};
+            if ($("#client").combobox("getValue")) {
+                obj.clientName = $("#client").combobox("getValue");
+            }
+            if ($("#startdate").datebox("getText")) {
+                obj.startdate = $("#startdate").datebox("getText");
+            }
+            if ($("#enddate").datebox("getText")) {
+                obj.enddate = $("#enddate").datebox("getText");
+            }
+            $.ajax({
+                type: "POST",
+                url: '/admin/jiesuandan/select',
+                data: obj,
+                success: function (result) {
+                    if (result.success) {
+                        $("#dg").datagrid("loadData", result.rows);
+                    }
+                }
+            });
+        }
+    </script>
+</head>
+<body class="easyui-layout" style="margin: 1px">
+<div region="north" style="height: 300px">
+    <table id="dg" title="结算单查询" class="easyui-datagrid"
+           fitColumns="false" rownumbers="true" singleSelect="true" fit="true"
+           toolbar="#tb" split="true">
+    </table>
+
+    <!-- dg顶部工具栏 -->
+    <div id="tb">
+        <fieldset style="border-color: #E7F0FF">
+            <legend>查询设置</legend>
+            &nbsp;&nbsp;&nbsp;客户：&nbsp;<input class="easyui-combobox"
+                                              id="client" name="client" style="width: 100px"
+                                              data-options="panelHeight:'auto',valueField:'name',textField:'name',url:'/admin/client/clientList'"/>
+            &nbsp;&nbsp;&nbsp;日期：&nbsp; <input id="startdate" class="easyui-datebox" editable=false
+                                               style="width: 100px"/>
+            &nbsp;&nbsp;&nbsp;&nbsp; <input id="enddate" class="easyui-datebox" editable=false style="width: 100px"/>
+            &nbsp;&nbsp;<a href="javascript:searchSale()"
+                           class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
+        </fieldset>
+    </div>
+</div>
+
+<div region="center" style="margin-top: 5px">
+    <table id="dg2" class="easyui-datagrid" fitColumns="false" rownumbers="true" fit="true" split="true">
+    </table>
+</div>
+
+</body>
+<script>
+
+    //修改订金
+    function updatedingjin() {
+        var row = $("#dg").datagrid("getSelected");
+        if (!row) {
+            alert("请选择一行！！");
+            return;
+        }
+        id = row.id;
+        if (!$("#dingjin").val()) {
+            alert("请输出订金！！");
+            return;
+        }
+        $.ajax({
+            type: "POST",
+            url: "/admin/saleList/updateDingjin",
+            data: {id: id, dingjin: $("#dingjin").val()},
+            success: function (result) {
+                if (result.success) {
+                    alert("修改成功");
+                    searchSale();
+                    $("#dingjin").val("");
+                }
+            }
+        })
+    }
+</script>
+</html>

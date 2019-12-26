@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>销售订单</title>
+    <style type="text/css">
+        #ti {
+            text-align: center;
+            font-size: 50px;
+        }
+
+        body {
+            background: white;
+            margin: 0px;
+            padding: 0 10px;
+            text-align: center;
+        }
+
+        table {
+            cellspacing: 0;
+            margin: 10px auto;
+        }
+
+        table td {
+            border: 1px solid #000;
+        }
+
+        table th {
+            border: 2px solid #000;
+        }
+
+        table {
+            border-collapse: collapse;
+            text-align: center;
+        }
+    </style>
+
+    <style media=print>
+        .PageNext {
+            page-break-after: always;
+        }
+    </style>
+
+</head>
+<body>
+<OBJECT ID='WebBrowser' NAME="WebBrowser" WIDTH=0 HEIGHT=0
+        CLASSID='CLSID:8856F961-340A-11D0-A96B-00C04FD705A2'></OBJECT>
+<script type="text/javascript" src="/static/js/LodopFuncs.js"></script>
+<script type="text/javascript" src="../static/js/jquery.js"></script>
+<script type="text/javascript">
+    if (window.dialogArguments) {
+        document.write(window.dialogArguments.tableString);
+    } else {
+        document.write(window.opener.tableString);
+    }
+
+    // for (var j = 0; j < 2; j++) {
+    //     window.print();
+    // }
+
+    // window.print();
+    // window.print();
+
+    // var timeId = setInterval(function () {
+    //     if (document.getElementsByTagName("img")) {
+    //         // window.close();
+    //         window.print();
+    //         alert("111");
+    //         clearInterval(timeId);
+    //         // window.print();
+    //     }
+    // }, 1000)
+    $(function () {
+        // var trs = $("tr");
+        // for (var i = 1; i < trs.length; i++) {
+        //     if (i % 35 == 0) {
+        //         console.log(i);
+        //         console.log(trs[i]);
+        //         $(trs[i]).css({"background": "red"});
+        //         $(trs[i]).after("</table><div class='PageNext'></div><table  id='idData' class='pb'>");
+        //     }
+        // }
+        window.print();
+    })
+</script>
+</body>
+</html>

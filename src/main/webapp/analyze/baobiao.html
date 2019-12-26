@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>月底报表</title>
+    <link rel="stylesheet" type="text/css" href="/static/jquery-easyui-1.3.3/themes/bootstrap/easyui.css"></link>
+    <link rel="stylesheet" type="text/css"
+          href="/static/jquery-easyui-1.3.3/themes/icon.css"></link>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/jquery.easyui.min.js"></script>
+    <script type="text/javascript"
+            src="/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="/static/js/date.js"></script>
+</head>
+<body style="margin: 1px" class="easyui-layout">
+<div data-options="region:'center'" style="padding: 10px; border: 1px;">
+    <table id="dg" class="easyui-datagrid"
+           rownumbers="true" singleSelect="true"
+           toolbar="#tb" fit="true">
+    </table>
+
+
+    <div id="tb" style="padding: 15px;">
+        <table>
+            <tr>
+                <td>
+                    &nbsp;&nbsp;&nbsp;&nbsp;开始日期： <input id="startdate" class="easyui-datebox" style="width: 150px"/>
+                </td>
+                <td>
+                    结束日期： <input id="enddate" class="easyui-datebox" style="width: 150px"/>
+                </td>
+                <td>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;选择客户：<input class="easyui-combobox" id="clientname" name="clientname" style="width: 100px" data-options="valueField:'name',textField:'name',url:'/admin/client/clientList'"/>
+                </td>
+                <td>
+                    <a href="javascript:screenYear()"
+                       class="easyui-linkbutton" plain="true" iconCls="icon-search">查询</a>
+                </td>
+                <td>
+                    <a href="javascript:dayin()"
+                       class="easyui-linkbutton" plain="true" iconCls="icon-print">打印</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<script>
+    //按年查询
+    function screenYear() {
+        var data = {};
+        if (!$("#startdate").datebox("getText")) {
+            alert("请输入要查询的开始日期");
+            return;
+        }
+        if (!$("#enddate").datebox("getText")) {
+            alert("请输入要查询的结束日期");
+            return;
+        }
+        data.stardate = $("#startdate").datebox("getText");
+        data.enddate = $("#enddate").datebox("getText");
+        if ($("#clientname").combobox("getValue")){
+            data.clientname = $("#clientname").combobox("getValue");
+        }
+        $.ajax({
+            type:"POST",
+            url:"/admin/storage/tongji",
+            data:data,
+            success:function (result) {
+                if (result.success){
+                    $("#dg").datagrid("loadData", result);
+                }
+            }
+        })
+
+    }
+
+    $(function () {
+        $("#dg").datagrid({
+            columns:[[
+                {field:'xiadanzhongliang',title:'下单理论重量',width:100,align:'center'},
+                {field:'weishengchan',title:'未生产重量',width:100,align:'center'},
+                {field:'yiwancheng',title:'实际完成重量',width:100,align:'center'}
+            ]]
+        });
+    });
+</script>
+</body>
+</html>

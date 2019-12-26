@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style type="text/css">
+        body {
+            background: white;
+            margin: 0px;
+            text-align: center;
+            padding: 0 60px 0 25px;
+        }
+
+        table td {
+            border: 1px solid #000;
+        }
+
+        table th {
+            border: 2px solid #000;
+        }
+
+        table {
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        tab {
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<object id="LODOP_OB" classid="clsid:2105C259-1E0C-4534-8141-A753534CB4CA" width=0 height=0>
+    <embed id="LODOP_EM" type="application/x-print-lodop" width=0 height=0></embed>
+</object>
+<script type="text/javascript" src="/static/js/LodopFuncs.js"></script>
+<script type="text/javascript">
+    if (window.dialogArguments) {
+        var index = window.dialogArguments.tableString.lastIndexOf(">");
+        var num = window.dialogArguments.tableString.substring(index + 1)
+        var table = window.dialogArguments.tableString.substring(0, index + 1);
+        for (var i = 0; i < num; i++) {
+            document.write(window.dialogArguments.tableString);
+            document.write("<div style='page-break-after: always;'></div>");
+        }
+        // document.write(window.dialogArguments.tableString);
+        // document.write("<div style='page-break-after: always;'></div>");
+        // document.write(window.dialogArguments.tableString);
+    } else {
+        var index = window.opener.tableString.lastIndexOf(">");
+        var num = window.opener.tableString.substring(index + 1)
+        var table = window.opener.tableString.substring(0, index + 1);
+        for (var i = 0; i < num; i++) {
+            document.write(window.opener.tableString);
+            document.write("<div style='page-break-after: always;'></div>");
+        }
+        // document.write(window.opener.tableString);
+        // document.write("<div style='page-break-after: always;'></div>");
+        // document.write(window.opener.tableString);
+    }
+    window.print();
+    var timeId = setInterval(function () {
+        if (document.getElementsByTagName("img")) {
+            window.close();
+            clearInterval(timeId);
+        }
+    }, 1000);
+    // window.onload = function () {
+    //     var LODOP = getLodop(document.getElementById('LODOP_OB'), document.getElementById('LODOP_EM'));
+    //     prn3_preview();
+    //     var timeId = setInterval(function () {
+    //         if (document.getElementsByTagName("img")) {
+    //             window.close();
+    //             clearInterval(timeId);
+    //         }
+    //     }, 1000);
+    //
+    //     //直接打印
+    //     function prn3_preview() {
+    //         LODOP = getLodop();
+    //         LODOP.PRINT_INIT("打印控件功能演示_Lodop功能_全页");
+    //         LODOP.ADD_PRINT_HTM(0, 0, "100%", "100%", document.documentElement.innerHTML);
+    //         LODOP.PRINT();
+    //     };
+    // }
+</script>
+</body>
+</html>
